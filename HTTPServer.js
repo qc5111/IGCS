@@ -11,11 +11,15 @@ class HTTPServer {
         //读取支持的类型
         let Fr = fs.readFileSync('mime.json');
         this.MIME = JSON.parse(Fr);
+        let ThisClass = this;
+        http.createServer(function (request, response){
+            ThisClass.HttpRequestProcessing(request, response)
+        }).listen(Port);
+    }
+    async HttpRequestProcessing(request, response){
+        {
 
-        let ThisClass = this
-        http.createServer(async function (request, response) {
-
-            let Resp=ThisClass.GetLocalReq(request.url)
+            let Resp=this.GetLocalReq(request.url)
             console.log(request.url, Resp.statusCode)
             if(Resp.Static){//静态类型，直接返回给客户端
                 response.writeHead(Resp.statusCode, {'Content-Type': Resp.MIME.type});
@@ -28,7 +32,7 @@ class HTTPServer {
 
             }else{
 
-                Resp = await ThisClass.GetAjaxReq(request);
+                Resp = await this.GetAjaxReq(request);
                 if(Resp.NewCookie !==undefined){
                     response.writeHead(200, {'Content-Type': "application/x-javascript", "Set-Cookie": Resp.NewCookie});
                 }
@@ -36,7 +40,7 @@ class HTTPServer {
                     response.writeHead(200, {'Content-Type': "application/x-javascript"});
                 }
 
-                console.log(JSON.stringify(Resp.Context))
+                //console.log(JSON.stringify(Resp.Context))
                 response.write(JSON.stringify(Resp.Context));
             }
             response.end()
@@ -46,8 +50,7 @@ class HTTPServer {
             //let DBResult = await DBConn.GetData("TestTable", {name:'Test'})
             //console.log("DBResult1",DBResult[0].url)
 
-        }).listen(Port);
-
+        }
     }
     GetCookiesExpires(now,ValidSeconds){
         now.setTime(now.getTime() + ValidSeconds*1000)

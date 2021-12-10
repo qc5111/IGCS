@@ -6,10 +6,15 @@
     <script src="jquery-3-6-0-min.js"></script>
     <meta charset="UTF-8">
     <style>
-        T{
+        .Sender{
             color:blue;
         }
-        C{
+        .SystemText{
+            color: grey;
+            text-align: center;
+        }
+        .Message{
+            margin-left: 20px;
         }
         html,body{
             width: 99%;
@@ -36,21 +41,20 @@
             height:93%;
             width:19%;
         }
+        .Members{
+            color: blue;
+        }
     </style>
 </head>
 
 <body>
 <div>
-    <div style="float: left; margin-right: 27%">
-        <tback id="Welcome">Welcome <a id="Nickname"></a>, Please select the channel:</tback>
-    </div>
-    <div style="float: left;">
-        <a>Channel</a>
-        <select id="sex" onchange="">
-
-
+    <div style="float: left; margin-right: 20%">
+        <tback id="Welcome">Welcome <a id="Nickname"></a>, Please select the channel</tback>
+        <select id="Channel" onchange="ChannelChange(this)">
         </select>
     </div>
+
 
 
     <div style="text-align:right" >
@@ -59,13 +63,10 @@
 
 </div>
 <div class = "MemberList">
-    User List
+    <div>Members in Channel:</div>
 </div>
 <div class="ChatShow">
-    <T>&nbsp;York Says at 16:41:21</T></br>
-    <C>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TestTestTestTestTestTestTestTestTestTestTestTestTestTest</C></br>
-    <T>&nbsp;York Says at 16:41:21</T></br>
-    <C>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TestTestTestTestTestTestTestTestTestTestTestTestTestTest</C></br>
+
 </div>
 
 <button>1</button>
@@ -73,7 +74,7 @@
 <button>1</button>
 <button onclick="SendMessage()">Send</button>
 <div class = "MessageSend">
-    <textarea id="SendText" onkeypress="SendKeyPress(event)" style="width:100%;height:100%;" value=""></textarea>
+    <textarea id="SendText" onkeypress="SendKeyPress(event)" style="width:100%;height:100%;" value="" disabled="true"></textarea>
 </div>
 
 
@@ -83,7 +84,18 @@
 
 <script type="text/javascript">
     GetBasicInfo()
-    var socket = new WebSocket("ws://localhost:8080/token=test");
+    console.log(document.domain)
+    let WSClient1;
+
+    function GotoNewChannel(ChannelID){
+        console.log("GOTO:"+ChannelID)
+        WSClient1 = new WSClient(ChannelID)
+    }
+    function ChannelChange(SelectBox){
+        WSClient1.Close()
+        GotoNewChannel(SelectBox.value)
+
+    }
     function CleanToken(){
         let PastDate=new Date();
         PastDate.setTime(-86400);
@@ -112,41 +124,88 @@
                     $("#Nickname")[0].innerText = Response.Nickname
 
                 }
-                Response.
+                let ChannelSelect = $("#Channel")
+                Response.Channels.forEach(function (Channel){
+                    ChannelSelect.append("<option value =\""+Channel._id+"\">"+Channel.Name+"</option>")
+
+
+                })
+                GotoNewChannel(Response.Channels[0]._id)
 
             }
         });
     }
     function SendMessage(){
-
-        //console.log($("#SendText")[0].value);
-        socket.send($("#SendText")[0].value);
-        $("#SendText")[0].value = "";
-        //socket.send("");
+        let SendText = $("#SendText")[0]
+        if(SendText.value!==""){
+            WSClient1.SendMessage(SendText.value);
+            SendText.value = "";
+        }
     }
     function SendKeyPress(event){
-        if(event.shiftKey == false && event.charCode==13){
+        if(event.shiftKey === false && event.charCode === 13){
             event.preventDefault();//Invalidate newline operation
             SendMessage();
         }
 
     }
-    socket.onopen = function(event) {
-        socket.send("I am the client and I’m listening!");
-        socket.onmessage = function(event) {
-            console.log("Client received a message",event.data);
-            $('.ChatShow').append("<T>"+event.data+"</T></br>");
-            //document.getElementsByClassName('ChatShow')[0].scrollTop=1000000;
-            $(".ChatShow").scrollTop($(".ChatShow")[0].scrollHeight);
-        };
+    class WSClient{
+        constructor(ChannelID){
+            this.ChatShow = $('.ChatShow')
+            this.socket = new WebSocket("ws://"+document.domain+":8989/ChannelID="+ChannelID);
+            let ThisClass = this;
+            this.socket.onopen = function (event){ ThisClass.Initialize(event)}
+            this.socket.onmessage = function (event){ ThisClass.RecvMessage(event)}
+            this.socket.onclose =  function (event){ThisClass.ServerClose(event)}
+        }
+        Initialize(){
+            console.log(this.socket)
+            this.socket.send(JSON.stringify({Action:"join"}));
+            $("#SendText").attr("disabled",false)
+        }
+        ShowMessage(Message){
+            Message.MessageText = Message.MessageText.replace(/\n/g,"<br>")
+            if(Message.MessageType==="system"){
 
-        // 监听Socket的关闭
-        socket.onclose = function(event) {
-            console.log("Client notified socket has closed",event);
-        };
+                this.ChatShow.append("<div class='SystemText'>"+Message.MessageText+"</div>");
+            }else if(Message.MessageType==="normal"){
+                let now = new Date()
+                this.ChatShow.append("<div class='Sender'>"+Message.Sender+" Says at "+now.toLocaleTimeString()+":</div>");
+                this.ChatShow.append("<div class='Message'>"+Message.MessageText+"</div>");
+            }
 
-        // 关闭Socket…
-        //socket.close()
-    };
+
+            this.ChatShow.scrollTop(this.ChatShow[0].scrollHeight);
+        }
+        RecvMessage(event){
+            let RecvJson=JSON.parse(event.data)
+            if(RecvJson.Action==="Message"){
+                this.ShowMessage(RecvJson)
+            }
+            else if(RecvJson.Action==="UpdateUserList"){
+                let MemberList = $(".MemberList")
+                $(".Members").remove()
+                RecvJson.UserList.forEach(function (UserNickname){
+                    MemberList.append("<div class='Members'>"+UserNickname+"</div>")
+                })
+
+
+            }
+
+        }
+        SendMessage(Message){
+            this.socket.send(JSON.stringify({Action:"Message", MessageText:Message}))
+        }
+        ServerClose(){
+            console.log("Socket has closed");
+        }
+        Close(){
+            this.ChatShow.empty()
+            this.socket.close()
+        }
+
+    }
+
+
 
 </script>
