@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="Public.css">
+    <script src="jquery-3-6-0-min.js"></script>
+    <script src="hash.js"></script>
+    <style>
+        footer{
+            position:absolute;
+            bottom:0;
+            left: 0;
+            width:100%;
+            height:100px;
+            background-color: black;
+        }
+        w{
+            color: white
+        }
+        .alert {
+            display: none;
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            min-width: 10px;
+            margin-left: -100px;
+            z-index: 99999;
+            padding: 15px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <title>IGCS Login</title>
+</head>
+<body class="center" style="background-color: #E5980C">
+<div class="alert"></div>
+<div class="row">
+    <img src="UOP.png" style="left: 20px;top: 20px;position: absolute;width: 300px"/>
+</div>
+
+<h1>Internal Group Chat System</h1>
+<h2>Login</h2>
+<hr>
+<table align="center" style="border-spacing: 5px 30px">
+    <tr><td><n>Username:</n></td><td><input class="wideinput" id="Username" placeholder="Your Username" type="text"/></td>&nbsp;&nbsp;</tr>
+    <tr><td><n>Password:</n></td><td><input class="wideinput" id="Password" placeholder="Your Password" type="password"/></td></tr>
+
+</table>
+<button style="width: 70px;height: 30px;margin-left:20px;margin-right:80px;" onclick="window.location='signup.html'">Sign Up</button>
+<button style="width: 70px;height: 30px;" onclick="Login()">Login</button>
+
+<footer>
+    <div>
+        <div style="float:left;width: 30%;text-align: left">
+
+
+        </div>
+        <div style="float:left;width: 100%">
+            <img src="UOP2.png" style="width: 80px"/>
+        </div>
+        <div style="float:left;width: 30%">
+
+
+        </div>
+    </div>
+
+
+
+</footer>
+
+
+</body>
+<script>
+    console.log()
+
+    if(document.cookie.slice(0,6)==="token="){
+        window.location.href="index.html"
+    }else{
+        document.cookie = ""
+    }
+    function AutoDisappearNotification(Content){
+        $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
+    }
+    function Login(){
+        let Username = $("#Username")[0].value
+        let Password = $("#Password")[0].value
+        if(Username===""){
+            AutoDisappearNotification("Username is necessary");
+            return;
+        }
+        if(Password===""){
+            AutoDisappearNotification("Password is necessary");
+            return;
+        }
+        Password = SHA1(Password)//加密，避免破解
+        $.ajax({
+            url: "login.ajax",
+            type: "get",
+            data: {Username:Username,Password:Password},
+            dataType: "json",
+            success: function (Response,Status){
+                if(Response.Success){
+                    window.location.href="index.html"
+                }else{
+                    AutoDisappearNotification(Response.ErrorText)
+                }
+
+
+            }
+        });
+        console.log(Username)
+        console.log(Password)
+    }
+</script>
+</html>

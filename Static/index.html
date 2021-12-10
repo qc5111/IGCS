@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <link rel="shortcut icon" href="ico.png">
+    <script src="jquery-3-6-0-min.js"></script>
+    <meta charset="UTF-8">
+    <style>
+        T{
+            color:blue;
+        }
+        C{
+        }
+        html,body{
+            width: 99%;
+            height: 99%;
+            background-color:#87CEEB;
+        }
+        .ChatShow{
+            overflow-y: auto;
+            overflow-x:hidden;
+            width:80%;
+            height:75%;
+            border:2px solid #87CEEB;
+            background-color:#ffffff;
+
+        }
+        .MessageSend{
+            width:80%;
+            height:15%;
+        }
+        .MemberList{
+            float:right;
+            border:2px solid #87CEEB;
+            background-color:#ffffff;
+            height:93%;
+            width:19%;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <div style="float: left; margin-right: 27%">
+        <tback id="Welcome">Welcome <a id="Nickname"></a>, Please select the channel:</tback>
+    </div>
+    <div style="float: left;">
+        <a>Channel</a>
+        <select id="sex" onchange="">
+
+
+        </select>
+    </div>
+
+
+    <div style="text-align:right" >
+        <a href="javascript:;" onclick = "Logout()">Log Out</a>
+    </div>
+
+</div>
+<div class = "MemberList">
+    User List
+</div>
+<div class="ChatShow">
+    <T>&nbsp;York Says at 16:41:21</T></br>
+    <C>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TestTestTestTestTestTestTestTestTestTestTestTestTestTest</C></br>
+    <T>&nbsp;York Says at 16:41:21</T></br>
+    <C>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TestTestTestTestTestTestTestTestTestTestTestTestTestTest</C></br>
+</div>
+
+<button>1</button>
+<button>1</button>
+<button>1</button>
+<button onclick="SendMessage()">Send</button>
+<div class = "MessageSend">
+    <textarea id="SendText" onkeypress="SendKeyPress(event)" style="width:100%;height:100%;" value=""></textarea>
+</div>
+
+
+</body>
+
+</html>
+
+<script type="text/javascript">
+    GetBasicInfo()
+    var socket = new WebSocket("ws://localhost:8080/token=test");
+    function CleanToken(){
+        let PastDate=new Date();
+        PastDate.setTime(-86400);
+        document.cookie="token=''; expires="+PastDate.toGMTString();
+        window.location.href="login.html"
+    }
+    function Logout(){
+        $.ajax({
+            url: "logout.ajax",
+            type: "get",
+            dataType: "json",
+            success: function (Response,Status){
+                CleanToken()
+            }
+        });
+    }
+    function GetBasicInfo(){
+        $.ajax({
+            url: "getbasicinfo.ajax",
+            type: "get",
+            dataType: "json",
+            success: function (Response,Status){
+                if(Response.Success===false){
+                    CleanToken()
+                }else{
+                    $("#Nickname")[0].innerText = Response.Nickname
+
+                }
+                Response.
+
+            }
+        });
+    }
+    function SendMessage(){
+
+        //console.log($("#SendText")[0].value);
+        socket.send($("#SendText")[0].value);
+        $("#SendText")[0].value = "";
+        //socket.send("");
+    }
+    function SendKeyPress(event){
+        if(event.shiftKey == false && event.charCode==13){
+            event.preventDefault();//Invalidate newline operation
+            SendMessage();
+        }
+
+    }
+    socket.onopen = function(event) {
+        socket.send("I am the client and I’m listening!");
+        socket.onmessage = function(event) {
+            console.log("Client received a message",event.data);
+            $('.ChatShow').append("<T>"+event.data+"</T></br>");
+            //document.getElementsByClassName('ChatShow')[0].scrollTop=1000000;
+            $(".ChatShow").scrollTop($(".ChatShow")[0].scrollHeight);
+        };
+
+        // 监听Socket的关闭
+        socket.onclose = function(event) {
+            console.log("Client notified socket has closed",event);
+        };
+
+        // 关闭Socket…
+        //socket.close()
+    };
+
+</script>

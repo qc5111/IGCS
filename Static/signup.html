@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="Public.css">
+    <script src="jquery-3-6-0-min.js"></script>
+    <script src="hash.js"></script>
+    <style>
+        footer{
+            position:absolute;
+            bottom:0;
+            left: 0;
+            width:100%;
+            height:100px;
+            background-color: black;
+        }
+        w{
+            color: white
+        }
+        .alert {
+            display: none;
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            min-width: 10px;
+            margin-left: -100px;
+            z-index: 99999;
+            padding: 15px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .DataError{
+            color: red;
+        }
+        .DataSuccess{
+            color: green;
+        }
+
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <title>IGCS Sign up</title>
+</head>
+<body class="center" style="background-color: #E5980C">
+<div class="alert"></div>
+<div class="row">
+    <img src="UOP.png" style="left: 20px;top: 20px;position: absolute;width: 300px"/>
+</div>
+
+<h1>Internal Group Chat System</h1>
+<h2>Sign up</h2>
+<hr>
+<table align="center" style="border-spacing: 5px 30px">
+    <a id="Errors" class="DataError"></a>
+    <tr><td><n>Username:</n></td><td><input class="wideinput" id="Username" placeholder="Your Username" type="text"/></td>&nbsp;&nbsp;</tr>
+    <tr><td><n>Nickname:</n></td><td><input class="wideinput" id="Nickname" placeholder="Your Nickname" type="text"/></td>&nbsp;&nbsp;</tr>
+    <tr><td><n>Email Address:</n></td><td><input class="wideinput" id="Email" placeholder="Your Email" type="text"/></td>&nbsp;&nbsp;</tr>
+    <tr><td><n>Password:</n></td><td><input class="wideinput" id="Password" placeholder="Your Password" type="password" oninput="CheckPassword(this)"/></td></tr>
+    <tr><td><n>Password Again:</n></td><td><input class="wideinput" id="Password2" placeholder="Please repeat the password" type="password" oninput="CheckPassword2(this)"/></td>&nbsp;&nbsp;</tr>
+
+</table>
+<button style="width: 70px;height: 30px;margin-left:20px;margin-right:80px;" onclick="window.location='login.html'">Login</button>
+<button style="width: 70px;height: 30px;" onclick="SignUp()">Sign up</button>
+
+<footer>
+    <div>
+        <div style="float:left;width: 30%;text-align: left">
+
+
+        </div>
+        <div style="float:left;width: 100%">
+            <img src="UOP2.png" style="width: 80px"/>
+        </div>
+        <div style="float:left;width: 30%">
+
+
+        </div>
+    </div>
+
+
+
+</footer>
+
+
+</body>
+<script>
+    function CheckPassword(PasswordBox){
+        let Errors= $("#Errors")
+        if(PasswordBox.value.length<8){
+            Errors[0].innerText = "Password need at least 8 digits"
+        }else{
+            Errors[0].innerText = ""
+        }
+
+    }
+    function CheckPassword2(PasswordBox){
+        let Errors= $("#Errors")
+        let PasswordBox1 = $("#Password")[0]
+        console.log($("#Password")[0].value)
+        if(PasswordBox.value !==  PasswordBox1.value){
+            Errors[0].innerText = "The two passwords must be the same"
+        }else{
+            Errors[0].innerText = ""
+        }
+
+    }
+
+    function AutoDisappearNotification(Content){
+        $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
+    }
+    function SignUp(){
+        let Username = $("#Username")[0].value
+        let Nickname = $("#Nickname")[0].value
+        let Email = $("#Email")[0].value
+        let Password = $("#Password")[0].value
+        let Password2 = $("#Password2")[0].value
+
+        if(Username===""){
+            AutoDisappearNotification("Username is necessary");
+            return;
+        }
+        if(Nickname===""){
+            AutoDisappearNotification("Nickname is necessary");
+            return;
+        }
+        if(Email===""){
+            AutoDisappearNotification("Email is necessary");
+            return;
+        }
+        if(Password.length<8){
+            AutoDisappearNotification("Password need at least 8 digits");
+            return;
+        }
+        if(Password!==Password2){
+            AutoDisappearNotification("The two passwords must be the same");
+            return;
+        }
+        Password = SHA1(Password)//加密，避免破解
+        $.ajax({
+            url: "signup.ajax",
+            type: "get",
+            data: {Username:Username,Nickname:Nickname,Email:Email,Password:Password},
+            dataType: "json",
+            success: function (Response,Status){
+                if(Response.Success){
+                    window.location.href="index.html"
+                }else{
+                    AutoDisappearNotification(Response.ErrorText)
+                }
+
+
+            }
+        });
+        console.log(Username)
+        console.log(Password)
+    }
+</script>
+</html>

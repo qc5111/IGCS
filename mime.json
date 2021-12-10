@@ -1,0 +1,9 @@
+{
+  "html": {"type":"text/html", "binary": false},
+  "js": {"type":"application/javascript", "binary": false},
+  "css": {"type":"text/css", "binary": false},
+  "ico": {"type":"image/x-icon", "binary": true},
+  "png": {"type":"image/png", "binary": true},
+  "ajax": {"type":"application/nodejs"}
+
+}
