@@ -44,10 +44,51 @@
         .Members{
             color: blue;
         }
+        .alert {
+            display: none;
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            min-width: 10px;
+            margin-left: -100px;
+            z-index: 99999;
+            padding: 15px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-notice {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .filediv {
+            position: relative;
+            display: inline;
+            background-color: #EFEFEF;
+            border: 1px solid #333;
+            padding: 1px 6px;
+            overflow: hidden;
+            text-decoration: none;
+            text-indent: 0;
+            border-radius: 5px;
+            color: #333;
+            font-size: 15px
+        }
+        .file-upload {
+            position: absolute;
+            width: 60px;
+            right: 0;
+            top: 0;
+            opacity: 0;
+        }
+        .Image{
+            margin-left: 20px;
+        }
     </style>
 </head>
 
 <body>
+<div class="alert"></div>
 <div>
     <div style="float: left; margin-right: 20%">
         <tback id="Welcome">Welcome <a id="Nickname"></a>, Please select the channel</tback>
@@ -69,10 +110,14 @@
 
 </div>
 
-<button>1</button>
-<button>1</button>
-<button>1</button>
-<button onclick="SendMessage()">Send</button>
+<div style="float: right;margin-right: 0.5%">
+    <div class="filediv">
+        <a>Image</a>
+        <input type="file" class="file-upload" onchange="SendImage(this)" accept="image/*"/>
+    </div>
+    <button style="font-size: 15px" onclick="SendMessage()">Send</button></div>
+
+
 <div class = "MessageSend">
     <textarea id="SendText" onkeypress="SendKeyPress(event)" style="width:100%;height:100%;" value="" disabled="true"></textarea>
 </div>
@@ -84,11 +129,15 @@
 
 <script type="text/javascript">
     GetBasicInfo()
-    console.log(document.domain)
     let WSClient1;
-
+    function SendImage(FileBox){
+        let Fr = new FileReader();
+        Fr.readAsDataURL(FileBox.files[0])
+        Fr.onloadend = function (){
+            WSClient1.SendImage(Fr.result)
+        }
+    }
     function GotoNewChannel(ChannelID){
-        console.log("GOTO:"+ChannelID)
         WSClient1 = new WSClient(ChannelID)
     }
     function ChannelChange(SelectBox){
@@ -149,6 +198,13 @@
         }
 
     }
+    function AutoDisappearNotification(Content){
+        $('.alert').html(Content).addClass('alert-notice').show().delay(2000).fadeOut();
+    }
+    function Roll(){
+        let ChatShow = $('.ChatShow')
+        ChatShow.scrollTop(ChatShow[0].scrollHeight);
+    }
     class WSClient{
         constructor(ChannelID){
             this.ChatShow = $('.ChatShow')
@@ -159,23 +215,27 @@
             this.socket.onclose =  function (event){ThisClass.ServerClose(event)}
         }
         Initialize(){
-            console.log(this.socket)
             this.socket.send(JSON.stringify({Action:"join"}));
             $("#SendText").attr("disabled",false)
         }
+
         ShowMessage(Message){
-            Message.MessageText = Message.MessageText.replace(/\n/g,"<br>")
             if(Message.MessageType==="system"){
-
-                this.ChatShow.append("<div class='SystemText'>"+Message.MessageText+"</div>");
+                AutoDisappearNotification(Message.MessageText)
             }else if(Message.MessageType==="normal"){
-                let now = new Date()
-                this.ChatShow.append("<div class='Sender'>"+Message.Sender+" Says at "+now.toLocaleTimeString()+":</div>");
+                Message.MessageText = Message.MessageText.replace(/\n/g,"<br>")
+                let MessageDate = new Date(Message.MessageTime)
+                this.ChatShow.append("<div class='Sender'>"+Message.Sender+" Says at "+MessageDate.toLocaleTimeString()+":</div>");
                 this.ChatShow.append("<div class='Message'>"+Message.MessageText+"</div>");
+            }else if(Message.MessageType==="image"){
+                let MessageDate = new Date(Message.MessageTime)
+                this.ChatShow.append("<div class='Sender'>"+Message.Sender+" Says at "+MessageDate.toLocaleTimeString()+":</div>");
+                this.ChatShow.append("<div class='Image'><img src='"+Message.MessageText+"' onload='if(this.width >= 800){this.width = 800}'></div>");
             }
+            setTimeout(Roll, 200);
 
 
-            this.ChatShow.scrollTop(this.ChatShow[0].scrollHeight);
+
         }
         RecvMessage(event){
             let RecvJson=JSON.parse(event.data)
@@ -194,7 +254,10 @@
 
         }
         SendMessage(Message){
-            this.socket.send(JSON.stringify({Action:"Message", MessageText:Message}))
+            this.socket.send(JSON.stringify({Action:"Message", MessageType:"normal", MessageText:Message}))
+        }
+        SendImage(Image){
+            this.socket.send(JSON.stringify({Action:"Message", MessageType:"image", MessageText:Image}))
         }
         ServerClose(){
             console.log("Socket has closed");
@@ -203,7 +266,6 @@
             this.ChatShow.empty()
             this.socket.close()
         }
-
     }
 
 

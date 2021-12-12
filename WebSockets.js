@@ -48,30 +48,52 @@ class WebSockets {
         let GroupSendMessage = JSON.stringify({Action:"UpdateUserList", UserList:UserList})
         this.GroupSend(ChannelID, GroupSendMessage)
     }
-
+    async RecordMessage(ChannelID,Message){
+        Message.ChannelID = ChannelID
+        this.DBConn.insert("MessageHistory",Message)
+    }
+    async GetHistoryMessages(ChannelID,limit){
+        let HistoryMessages=await this.DBConn.select("MessageHistory",{ChannelID:ChannelID, MessageType:{$ne:"system"}},{MessageTime:"-1"},limit)
+        HistoryMessages.reverse()
+        return HistoryMessages
+    }
     async DataRecv(socket, Data){
         let RecvJson = JSON.parse(Data)
+        let SendJson = {}
         let ChannelID = socket.path.split("=")[1]
         let Cookies = this.DecodeCookies(socket.headers.cookie)
         let Username = await this.GetUsernameFromToken(Cookies["token"])
         let User = await this.DBConn.select("Users",{Username:Username})
         socket.headers.nickname = User[0].Nickname
-        let GroupSendMessage
         if(RecvJson.Action === "join"){
             if(this.Clients[ChannelID]===undefined) {
                 this.Clients[ChannelID] = [];
             }
             this.Clients[ChannelID].push(socket);
             this.UpdateUserList(ChannelID)//更新当前频道用户列表
-            GroupSendMessage = JSON.stringify({Action:"Message", MessageType:"system",MessageText:User[0].Nickname+" join the meeting"})
+            let HistoryMessages = await this.GetHistoryMessages(ChannelID,20)//获取20条历史记录
+            HistoryMessages.forEach(function (HistoryMessage){
+                socket.send(JSON.stringify(HistoryMessage))
+            })
+
+            SendJson = {Action:"Message", MessageType:"system",MessageText:User[0].Nickname+" join the meeting"}
         }else if(RecvJson.Action === "Message"){
-            RecvJson.MessageType = "normal"
-            RecvJson.Sender = User[0].Nickname
-            GroupSendMessage = JSON.stringify(RecvJson)
+            if(RecvJson.MessageType === "normal"){
+                SendJson = RecvJson
+                SendJson.Sender = User[0].Nickname
+            }else if(RecvJson.MessageType === "image"){
+                SendJson = RecvJson
+                SendJson.Sender = User[0].Nickname
+            }else{
+                return
+            }
+
         }
-        this.GroupSend(ChannelID, GroupSendMessage)
+        SendJson.MessageTime = (new Date()).valueOf()
+        await this.RecordMessage(ChannelID, SendJson)
+        this.GroupSend(ChannelID, JSON.stringify(SendJson))
     }
-    ClientClose(socket){
+    async ClientClose(socket){
         let ChannelID = socket.path.split("=")[1]
         for(let i=0;i<this.Clients[ChannelID].length;i++){
             if(socket===this.Clients[ChannelID][i]){
@@ -80,8 +102,10 @@ class WebSockets {
                 break
             }
         }
-        let GroupSendMessage = JSON.stringify({Action:"Message", MessageType:"system",MessageText:socket.headers.nickname+" leave the meeting"})
-        this.GroupSend(ChannelID, GroupSendMessage)
+        let SendJson = {Action:"Message", MessageType:"system",MessageText:socket.headers.nickname+" leave the meeting"}
+        SendJson.MessageTime = (new Date()).valueOf()
+        await this.RecordMessage(ChannelID, SendJson)
+        this.GroupSend(ChannelID, JSON.stringify(SendJson))
     }
 
 }

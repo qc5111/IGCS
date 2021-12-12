@@ -78,11 +78,8 @@
 
 </body>
 <script>
-    if(document.cookie.slice(0,6)==="token="){
-        window.location.href="index.html"
-    }else{
-        document.cookie = ""
-    }
+
+
     function AutoDisappearNotification(Content){
         $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
     }

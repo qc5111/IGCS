@@ -15,8 +15,18 @@ class MongoConn{
     async insert(Table, Data) {
         await this.MDB.collection(Table).insertOne(Data);
     }
-    async select(Table, filter) {
-        let DBResult = await this.MDB.collection(Table).find(filter)
+    async select(Table, filter, sort={},limit=0) {
+        let DBResult
+        if(sort==={} && limit===0){
+            DBResult = await this.MDB.collection(Table).find(filter)
+        }else if(sort!=={} && limit===0){
+            DBResult = await this.MDB.collection(Table).find(filter).sort(sort)
+        }else if(sort==={} && limit!==0){
+            DBResult = await this.MDB.collection(Table).find(filter).limit(limit)
+        }else{
+            DBResult = await this.MDB.collection(Table).find(filter).sort(sort).limit(limit)
+        }
+
         let ReturnData = []
         await DBResult.forEach(function (Data){
             ReturnData.push(Data)
@@ -26,6 +36,7 @@ class MongoConn{
     async delete(Table, filter){
         await this.MDB.collection(Table).deleteMany(filter);
     }
+
     close(){
         this.MongoClient.close()
     }
