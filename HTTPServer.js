@@ -15,6 +15,9 @@ class HTTPServer {
         http.createServer(function (request, response){
             ThisClass.HttpRequestProcessing(request, response)
         }).listen(Port);
+        setTimeout(function (){
+            ThisClass.AutoDeletetoken(ThisClass)
+        },3000)
     }
     async HttpRequestProcessing(request, response){
         {
@@ -236,7 +239,6 @@ class HTTPServer {
         let Channels = await this.DBConn.select("Channels")
         return {Context:{Success:true,Nickname:User[0].Nickname,Channels:Channels}}
     }
-
     async AjaxCreateChannel(request){
         let ReqInfo= await this.GetReqBasicInfo(request)
         console.log()
@@ -258,6 +260,14 @@ class HTTPServer {
         console.log({"_id":ReqInfo.params.ChannelID})
         return {Context:{Success:true}}
 
+    }
+    AutoDeletetoken(ThisClass){
+        let now = new Date()
+        let LowestValid = Math.round(now.valueOf()/1000) + 600 //增加了10分钟缓冲
+        ThisClass.DBConn.delete("token",{valid:{$lte:LowestValid}})
+        setTimeout(function (){
+            ThisClass.AutoDeletetoken(ThisClass)
+        },600000)//10 minutes
     }
 }
 module.exports = HTTPServer;

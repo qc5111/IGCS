@@ -36,7 +36,6 @@ class MongoConn{
     async delete(Table, filter){
         await this.MDB.collection(Table).deleteMany(filter);
     }
-
     close(){
         this.MongoClient.close()
     }
