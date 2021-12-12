@@ -1,41 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" type="text/css" href="Public.css">
+    <link rel="shortcut icon" href="ico.png">
+    <link rel="stylesheet" type="text/css" href="public.css">
     <script src="jquery-3-6-0-min.js"></script>
+    <script src="public.js"></script>
     <script src="hash.js"></script>
-    <style>
-        footer{
-            position:absolute;
-            bottom:0;
-            left: 0;
-            width:100%;
-            height:100px;
-            background-color: black;
-        }
-        w{
-            color: white
-        }
-        .alert {
-            display: none;
-            position: fixed;
-            top: 10%;
-            left: 50%;
-            min-width: 10px;
-            margin-left: -100px;
-            z-index: 99999;
-            padding: 15px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-
-        .alert-danger {
-            color: #a94442;
-            background-color: #f2dede;
-            border-color: #ebccd1;
-        }
-
-    </style>
     <meta charset="UTF-8">
     <title>IGCS Login</title>
 </head>
@@ -83,18 +53,16 @@
     }else{
         document.cookie = ""
     }
-    function AutoDisappearNotification(Content){
-        $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
-    }
+
     function Login(){
         let Username = $("#Username")[0].value
         let Password = $("#Password")[0].value
         if(Username===""){
-            AutoDisappearNotification("Username is necessary");
+            AutoDisappearNotification("Username is necessary", "alert-danger");
             return;
         }
         if(Password===""){
-            AutoDisappearNotification("Password is necessary");
+            AutoDisappearNotification("Password is necessary", "alert-danger");
             return;
         }
         Password = SHA1(Password)//加密，避免破解
@@ -105,9 +73,10 @@
             dataType: "json",
             success: function (Response,Status){
                 if(Response.Success){
-                    window.location.href="index.html"
+                    AutoDisappearNotification("Login Successful! Please waiting for jumping", "alert-notice")
+                    WaitAndJump("index.html",1000)
                 }else{
-                    AutoDisappearNotification(Response.ErrorText)
+                    AutoDisappearNotification(Response.ErrorText, "alert-danger")
                 }
 
 

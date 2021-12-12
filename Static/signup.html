@@ -1,47 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" type="text/css" href="Public.css">
+    <link rel="shortcut icon" href="ico.png">
+    <link rel="stylesheet" type="text/css" href="public.css">
     <script src="jquery-3-6-0-min.js"></script>
+    <script src="public.js"></script>
     <script src="hash.js"></script>
-    <style>
-        footer{
-            position:absolute;
-            bottom:0;
-            left: 0;
-            width:100%;
-            height:100px;
-            background-color: black;
-        }
-        w{
-            color: white
-        }
-        .alert {
-            display: none;
-            position: fixed;
-            top: 10%;
-            left: 50%;
-            min-width: 10px;
-            margin-left: -100px;
-            z-index: 99999;
-            padding: 15px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .DataError{
-            color: red;
-        }
-        .DataSuccess{
-            color: green;
-        }
-
-        .alert-danger {
-            color: #a94442;
-            background-color: #f2dede;
-            border-color: #ebccd1;
-        }
-
-    </style>
     <meta charset="UTF-8">
     <title>IGCS Sign up</title>
 </head>
@@ -108,35 +72,30 @@
         }
 
     }
-
-    function AutoDisappearNotification(Content){
-        $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
-    }
     function SignUp(){
         let Username = $("#Username")[0].value
         let Nickname = $("#Nickname")[0].value
         let Email = $("#Email")[0].value
         let Password = $("#Password")[0].value
         let Password2 = $("#Password2")[0].value
-
         if(Username===""){
-            AutoDisappearNotification("Username is necessary");
+            AutoDisappearNotification("Username is necessary","alert-danger");
             return;
         }
         if(Nickname===""){
-            AutoDisappearNotification("Nickname is necessary");
+            AutoDisappearNotification("Nickname is necessary","alert-danger");
             return;
         }
         if(Email===""){
-            AutoDisappearNotification("Email is necessary");
+            AutoDisappearNotification("Email is necessary","alert-danger");
             return;
         }
         if(Password.length<8){
-            AutoDisappearNotification("Password need at least 8 digits");
+            AutoDisappearNotification("Password need at least 8 digits","alert-danger");
             return;
         }
         if(Password!==Password2){
-            AutoDisappearNotification("The two passwords must be the same");
+            AutoDisappearNotification("The two passwords must be the same","alert-danger");
             return;
         }
         Password = SHA1(Password)//加密，避免破解
@@ -147,9 +106,10 @@
             dataType: "json",
             success: function (Response,Status){
                 if(Response.Success){
-                    window.location.href="index.html"
+                    AutoDisappearNotification("Signup Successful! Please waiting for jumping", "alert-notice")
+                    WaitAndJump("index.html",2000)
                 }else{
-                    AutoDisappearNotification(Response.ErrorText)
+                    AutoDisappearNotification(Response.ErrorText, "alert-danger")
                 }
 
 

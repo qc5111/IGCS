@@ -3,15 +3,13 @@
 
 <head>
     <link rel="shortcut icon" href="ico.png">
+    <link rel="stylesheet" type="text/css" href="public.css">
     <script src="jquery-3-6-0-min.js"></script>
+    <script src="public.js"></script>
     <meta charset="UTF-8">
     <style>
         .Sender{
             color:blue;
-        }
-        .SystemText{
-            color: grey;
-            text-align: center;
         }
         .Message{
             margin-left: 20px;
@@ -28,7 +26,6 @@
             height:75%;
             border:2px solid #87CEEB;
             background-color:#ffffff;
-
         }
         .MessageSend{
             width:80%;
@@ -43,23 +40,6 @@
         }
         .Members{
             color: blue;
-        }
-        .alert {
-            display: none;
-            position: fixed;
-            top: 10%;
-            left: 50%;
-            min-width: 10px;
-            margin-left: -100px;
-            z-index: 99999;
-            padding: 15px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .alert-notice {
-            color: #3c763d;
-            background-color: #dff0d8;
-            border-color: #d6e9c6;
         }
         .filediv {
             position: relative;
@@ -146,25 +126,7 @@
         GotoNewChannel(SelectBox.value)
 
     }
-    function CleanToken(){
-        let PastDate=new Date();
-        PastDate.setTime(-86400);
-        document.cookie="token=''; expires="+PastDate.toGMTString();
-        window.location.href="login.html"
-    }
-    function Logout(){
-        $.ajax({
-            url: "logout.ajax",
-            type: "get",
-            dataType: "json",
-            success: function (Response,Status){
-                CleanToken()
-            }
-        });
-    }
-    function JumpToChannelList(){
-        window.location.href="channel.html"
-    }
+
     function GetBasicInfo(){
         $.ajax({
             url: "getbasicinfo.ajax",
@@ -180,8 +142,8 @@
                         ChannelSelect.append("<option value =\""+Channel._id+"\">"+Channel.Name+"</option>")
                     })
                     if(Response.Channels.length===0){
-                        AutoDisappearNotification("No channel! Jump to channel list in 2 seconds")
-                        setTimeout(JumpToChannelList,2000)
+                        AutoDisappearNotification("No channel! Jump to channel list in 2 seconds", "alert-danger")
+                        WaitAndJump("channel.html",2000)
                     }
                     GotoNewChannel(Response.Channels[0]._id)
                 }
@@ -204,9 +166,7 @@
         }
 
     }
-    function AutoDisappearNotification(Content){
-        $('.alert').html(Content).addClass('alert-notice').show().delay(2000).fadeOut();
-    }
+
     function Roll(){
         let ChatShow = $('.ChatShow')
         ChatShow.scrollTop(ChatShow[0].scrollHeight);
@@ -227,7 +187,7 @@
 
         ShowMessage(Message){
             if(Message.MessageType==="system"){
-                AutoDisappearNotification(Message.MessageText)
+                AutoDisappearNotification(Message.MessageText, "alert-notice")
             }else if(Message.MessageType==="normal"){
                 Message.MessageText = Message.MessageText.replace(/\n/g,"<br>")
                 let MessageDate = new Date(Message.MessageTime)
