@@ -1,2 +1,0 @@
-npm install nodejs-websocket --save
-npm install mongodb

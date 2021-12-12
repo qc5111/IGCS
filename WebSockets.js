@@ -1,8 +1,6 @@
-const ws = require('nodejs-websocket');
+const ws = require('nodejs-websocket');//npm install nodejs-websocket
 
-//var clients = new Array();
 class WebSockets {
-
     constructor(DBConn,Port) {
         this.DBConn = DBConn
         this.Clients = {};
@@ -12,9 +10,8 @@ class WebSockets {
             socket.on("close", function (code, reason) {ThisClass.ClientClose(socket)});
             socket.on('error', function(code) {});
         }).listen(Port);
-    }
+    }//Start listening the ws server
     DecodeCookies(Cookies){
-
         let CookiesDict = {}
         if(Cookies === undefined){
             return CookiesDict
@@ -25,7 +22,7 @@ class WebSockets {
             CookiesDict[CookieArray2[0]] = CookieArray2[1]
         })
         return CookiesDict
-    }
+    }//Parse standard http cookies to json
     async GetUsernameFromToken(token){
         let ThisToken = await this.DBConn.select("token",{token:token})
         if(ThisToken.length===0){
@@ -34,29 +31,29 @@ class WebSockets {
             return ThisToken[0].Username
         }
 
-    }
+    }//Obtain the Username through a valid token, and return an empty string if it fails
     GroupSend(ChannelID,SendData){
-        this.Clients[ChannelID].forEach(function (Client){//遍历发送
+        this.Clients[ChannelID].forEach(function (Client){//Traverse sending
             Client.send(SendData);
         })
-    }
+    }//Broadcast on designated channel
     UpdateUserList(ChannelID){
         let UserList = []
-        this.Clients[ChannelID].forEach(function (Client){//遍历获取列表
+        this.Clients[ChannelID].forEach(function (Client){//Traverse to get the list
             UserList.push(Client.headers.nickname)
         })
         let GroupSendMessage = JSON.stringify({Action:"UpdateUserList", UserList:UserList})
         this.GroupSend(ChannelID, GroupSendMessage)
-    }
+    }//Get the current channel user list
     async RecordMessage(ChannelID,Message){
         Message.ChannelID = ChannelID
         this.DBConn.insert("MessageHistory",Message)
-    }
+    }//Log the message in the database
     async GetHistoryMessages(ChannelID,limit){
         let HistoryMessages=await this.DBConn.select("MessageHistory",{ChannelID:ChannelID, MessageType:{$ne:"system"}},{MessageTime:"-1"},limit)
         HistoryMessages.reverse()
         return HistoryMessages
-    }
+    }//Get the current channel history information (including pictures)
     async DataRecv(socket, Data){
         let RecvJson = JSON.parse(Data)
         let SendJson = {}
@@ -70,8 +67,8 @@ class WebSockets {
                 this.Clients[ChannelID] = [];
             }
             this.Clients[ChannelID].push(socket);
-            this.UpdateUserList(ChannelID)//更新当前频道用户列表
-            let HistoryMessages = await this.GetHistoryMessages(ChannelID,20)//获取20条历史记录
+            this.UpdateUserList(ChannelID)//Update current channel user list
+            let HistoryMessages = await this.GetHistoryMessages(ChannelID,20)//Get 20 history records
             HistoryMessages.forEach(function (HistoryMessage){
                 socket.send(JSON.stringify(HistoryMessage))
             })
@@ -92,13 +89,13 @@ class WebSockets {
         SendJson.MessageTime = (new Date()).valueOf()
         await this.RecordMessage(ChannelID, SendJson)
         this.GroupSend(ChannelID, JSON.stringify(SendJson))
-    }
+    }//Process the message sent by the client and handle it
     async ClientClose(socket){
         let ChannelID = socket.path.split("=")[1]
         for(let i=0;i<this.Clients[ChannelID].length;i++){
             if(socket===this.Clients[ChannelID][i]){
                 this.Clients[ChannelID].splice(i,1)
-                this.UpdateUserList(ChannelID)//更新当前频道用户列表
+                this.UpdateUserList(ChannelID)//Update current channel user list
                 break
             }
         }
@@ -106,8 +103,7 @@ class WebSockets {
         SendJson.MessageTime = (new Date()).valueOf()
         await this.RecordMessage(ChannelID, SendJson)
         this.GroupSend(ChannelID, JSON.stringify(SendJson))
-    }
-
+    }//Execute after the user closes the ws connection
 }
 
 module.exports = WebSockets;

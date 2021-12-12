@@ -1,5 +1,4 @@
-const crypto = require('crypto');
-
+const crypto = require('crypto');//npm install crypto
 
 function md5(data){
     return crypto.createHash('md5').update(data).digest('hex')
