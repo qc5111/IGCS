@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const url = require("url");
 const Hash = require("./Hash");
-
+const ObjectId = require("mongodb").ObjectId;
 
 class HTTPServer {
     constructor(DBConn,Port){
@@ -136,6 +136,18 @@ class HTTPServer {
         })
         return CookiesDict
     }
+    async GetReqBasicInfo(request) {
+        let params = url.parse(request.url, true).query;
+        let Cookies = this.DecodeCookies(request.headers.cookie)
+        if (Cookies.token === undefined) {
+            return ""
+        }
+        let Username = await this.GetUsernameFromToken(Cookies.token)
+        if (Username === "") {
+            return ""
+        }
+        return {Username:Username, params:params}
+    }
     async GetAjaxReq(request) {
         let URL = request.url
         let Pos = URL.indexOf("?")
@@ -156,6 +168,12 @@ class HTTPServer {
 
         } else if (URL === "getbasicinfo.ajax"){
             return await this.AjaxGetBasicInfo(request)
+
+        } else if (URL === "createchannel.ajax"){
+            return await this.AjaxCreateChannel(request)
+
+        } else if (URL === "deletechannel.ajax"){
+            return await this.AjaxDeleteChannel(request)
 
         } else {
             return {Context:{Success:false, ErrorText:"404 not found"}}
@@ -217,6 +235,29 @@ class HTTPServer {
         //读取频道列表
         let Channels = await this.DBConn.select("Channels")
         return {Context:{Success:true,Nickname:User[0].Nickname,Channels:Channels}}
+    }
+
+    async AjaxCreateChannel(request){
+        let ReqInfo= await this.GetReqBasicInfo(request)
+        console.log()
+        if(ReqInfo===""){
+            return {Context:{Success:false}}
+        }
+        let Nowtime = new Date()
+        await this.DBConn.insert("Channels",{Name:ReqInfo.params.ChannelName,"Created By":ReqInfo.Username,"Created Date":Nowtime.valueOf()})
+        return {Context:{Success:true}}
+
+    }
+    async AjaxDeleteChannel(request){
+        let ReqInfo= await this.GetReqBasicInfo(request)
+        console.log(ReqInfo)
+        if(ReqInfo===""){
+            return {Context:{Success:false}}
+        }
+        await this.DBConn.delete("Channels",{_id:ObjectId(ReqInfo.params.ChannelID)})
+        console.log({"_id":ReqInfo.params.ChannelID})
+        return {Context:{Success:true}}
+
     }
 }
 module.exports = HTTPServer;

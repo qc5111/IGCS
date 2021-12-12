@@ -99,6 +99,7 @@
 
 
     <div style="text-align:right" >
+        <a href="channel.html">Channel List</a>
         <a href="javascript:;" onclick = "Logout()">Log Out</a>
     </div>
 
@@ -161,6 +162,9 @@
             }
         });
     }
+    function JumpToChannelList(){
+        window.location.href="channel.html"
+    }
     function GetBasicInfo(){
         $.ajax({
             url: "getbasicinfo.ajax",
@@ -171,15 +175,17 @@
                     CleanToken()
                 }else{
                     $("#Nickname")[0].innerText = Response.Nickname
-
+                    let ChannelSelect = $("#Channel")
+                    Response.Channels.forEach(function (Channel){
+                        ChannelSelect.append("<option value =\""+Channel._id+"\">"+Channel.Name+"</option>")
+                    })
+                    if(Response.Channels.length===0){
+                        AutoDisappearNotification("No channel! Jump to channel list in 2 seconds")
+                        setTimeout(JumpToChannelList,2000)
+                    }
+                    GotoNewChannel(Response.Channels[0]._id)
                 }
-                let ChannelSelect = $("#Channel")
-                Response.Channels.forEach(function (Channel){
-                    ChannelSelect.append("<option value =\""+Channel._id+"\">"+Channel.Name+"</option>")
 
-
-                })
-                GotoNewChannel(Response.Channels[0]._id)
 
             }
         });

@@ -1,0 +1,8 @@
+{
+  "name": "SourceCode",
+  "version": "1.0.0",
+  "dependencies": {
+    "mongodb": "^4.2.1",
+    "nodejs-websocket": "^1.7.2"
+  }
+}

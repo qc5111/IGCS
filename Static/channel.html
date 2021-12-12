@@ -34,10 +34,23 @@
             background-color: #f2dede;
             border-color: #ebccd1;
         }
+        .alert-notice {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .rules-rows td {
+            border-bottom: 1px solid black;
+        }
+        .ChannelTable{
+            border-collapse: separate;
+            width: 100%;
+            border-spacing: 0px 20px;
+        }
 
     </style>
     <meta charset="UTF-8">
-    <title>IGCS Login</title>
+    <title>IGCS Channel List</title>
 </head>
 <body class="center" style="background-color: #E5980C">
 <div class="alert"></div>
@@ -45,16 +58,38 @@
     <img src="UOP.png" style="left: 20px;top: 20px;position: absolute;width: 300px"/>
 </div>
 
-<h1>Internal Group Chat System</h1>
-<h2>Login</h2>
-<hr>
-<table align="center" style="border-spacing: 5px 30px">
-    <tr><td><n>Username:</n></td><td><input class="wideinput" id="Username" placeholder="Your Username" type="text"/></td>&nbsp;&nbsp;</tr>
-    <tr><td><n>Password:</n></td><td><input class="wideinput" id="Password" placeholder="Your Password" type="password"/></td></tr>
+
+<div style="float: left;width: 5%">
+<br>
+</div>
+
+<div style="float: left;width: 90%">
+    <h1>Internal Group Chat System</h1>
+    <h2>Channel List</h2>
+    <hr>
+</div>
+<div style="float: right;width: 5%">
+    <a href="index.html">Index</a>
+</div>
+
+
+<input id="ChannelName" placeholder="Channel Name" style="margin-right: 10px">
+<button onclick="CreateChannel()">Create Channel</button>
+<table class="ChannelTable rules-rows" >
+    <thead>
+    <tr>
+        <th>Channel ID</th>
+        <th>Channel Name</th>
+        <th>Created By</th>
+        <th>Created Date</th>
+        <th>Operation</th>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
 
 </table>
-<button style="width: 70px;height: 30px;margin-left:20px;margin-right:80px;" onclick="window.location='signup.html'">Sign Up</button>
-<button style="width: 70px;height: 30px;" onclick="Login()">Login</button>
+
 
 <footer>
     <div>
@@ -78,40 +113,72 @@
 
 </body>
 <script>
-
-
-    function AutoDisappearNotification(Content){
-        $('.alert').html(Content).addClass('alert-danger').show().delay(2000).fadeOut();
+    GetBasicInfo()
+    function AutoDisappearNotification(Content,NoticeClass){//'alert-danger'
+        $('.alert').html(Content).addClass(NoticeClass).show().delay(2000).fadeOut();
     }
-    function Login(){
-        let Username = $("#Username")[0].value
-        let Password = $("#Password")[0].value
-        if(Username===""){
-            AutoDisappearNotification("Username is necessary");
-            return;
+    function CreateChannel(){
+        let ChannelName = $("#ChannelName")[0].value
+        if (ChannelName===""){
+            AutoDisappearNotification("Channel need a name","alert-danger")
+            return
         }
-        if(Password===""){
-            AutoDisappearNotification("Password is necessary");
-            return;
-        }
-        Password = SHA1(Password)//加密，避免破解
         $.ajax({
-            url: "login.ajax",
+            url: "createchannel.ajax",
             type: "get",
-            data: {Username:Username,Password:Password},
+            data: {ChannelName:ChannelName},
             dataType: "json",
             success: function (Response,Status){
-                if(Response.Success){
-                    window.location.href="index.html"
-                }else{
-                    AutoDisappearNotification(Response.ErrorText)
-                }
+                AutoDisappearNotification("Channel Created Successful!","alert-notice")
+                GetBasicInfo()
+            }
+        });
 
+    }
+    function DeleteChannel(Button){
+        console.log()
+        $.ajax({
+            url: "deletechannel.ajax",
+            type: "get",
+            data: {ChannelID:Button.id},
+            dataType: "json",
+            success: function (Response,Status){
+                AutoDisappearNotification("Channel Delete Successful!","alert-notice")
+                GetBasicInfo()
 
             }
         });
-        console.log(Username)
-        console.log(Password)
     }
+    function GetBasicInfo(){
+        $.ajax({
+            url: "getbasicinfo.ajax",
+            type: "get",
+            dataType: "json",
+            success: function (Response,Status){
+                if(Response.Success === false){
+                    window.location.href="login.html"
+                }
+                let i=1;
+                let ChannelTable = $("#tbody")
+                ChannelTable.empty()
+                let CreateDate;
+                Response.Channels.forEach(function (Channel){
+                    CreateDate = new Date(Channel["Created Date"])
+                    ChannelTable.append("<tr>" +
+                        "<td>"+i+"</td>" +
+                        "<td>"+Channel.Name+"</td>" +
+                        "<td>"+Channel["Created By"]+"</td>" +
+                        "<td>"+CreateDate.toLocaleString()+"</td>" +
+                        "<td><button id='"+Channel._id+"' onclick='DeleteChannel(this)'>Delete</button></td>" +
+                        "</tr>")
+                    i++;
+
+
+                })
+
+            }
+        });
+    }
+
 </script>
 </html>
