@@ -63,16 +63,18 @@ class HTTPServer {
         let statusCode
         let ErrorText
         let HTMLData
+        let ExtName
         URL = URL.slice(1)
         if(URL ===""){
             URL = "index.html"
         }
-        let ExtName = URL.slice(URL.indexOf(".")+1)
+        ExtName = URL
         let Pos = ExtName.indexOf("?")
-
         if (Pos!==-1){//带GET参数，需要去除
             ExtName = ExtName.slice(0,Pos)
         }
+        ExtName = ExtName.slice(ExtName.lastIndexOf(".")+1)
+
         let MIME = this.MIME[ExtName]
         console.log(ExtName)
         if(MIME===undefined){//不支持的媒体类型 415返回值
