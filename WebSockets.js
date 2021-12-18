@@ -32,7 +32,7 @@ class WebSockets {
         }
 
     }//Obtain the Username through a valid token, and return an empty string if it fails
-    GroupSend(ChannelID,SendData){
+    async GroupSend(ChannelID,SendData){
         this.Clients[ChannelID].forEach(function (Client){//Traverse sending
             Client.send(SendData);
         })

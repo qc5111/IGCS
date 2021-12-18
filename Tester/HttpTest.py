@@ -16,6 +16,7 @@ class HttpGetTest():
         self.Result = [[0, 0]] * Thread
         Durations = [0] * Thread
         Errors = 0
+        self.CompleteAccount = 0
         for i in range(Thread):
             ThreadNumber = _thread.start_new_thread(self.TestThread, (i,))
         while self.CompleteAccount < Thread:
@@ -25,7 +26,7 @@ class HttpGetTest():
             Errors += self.Result[i][1]
         AverageTimeOfRequest = (sum(Durations) / Thread) / (Thread * SingleTestAmount)
         ReturnText = "Test of URL:'%s', Total Request Amount:%d\nAverage time per request(seconds):%f\nTotal Thread:%d, Total Errors:%d\nFastest Thread(seconds):%f,Slowest Thread(seconds):%f\nScore:%f" % (
-        URL, Thread * SingleTestAmount, AverageTimeOfRequest, Thread, Errors, max(Durations), min(Durations),
+        URL, Thread * SingleTestAmount, AverageTimeOfRequest, Thread, Errors, min(Durations), max(Durations),
         1 / AverageTimeOfRequest)
         return ReturnText
 

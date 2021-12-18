@@ -4,6 +4,35 @@ import WebSocketTest
 import time
 import threading
 
+
+
+# HTTP test snippet
+LinkArr = [
+    "http://10.0.1.172/login.html",
+    "http://10.0.1.172/UOP.png",
+    "http://10.0.1.172/public.js",
+    "http://10.0.1.172/signup.ajax?Username=qc5111&Nickname=York&Email=247731705%40qq.com&Password=3bc21fd44ce4590137481f2755c0c8dbedffb56b",
+    "http://10.0.1.172/login.ajax?Username=qc5111&Password=3bc21fd44ce4590137481f2755c0c8dbedffb56b",
+    "http://10.0.1.172/getbasicinfo.ajax",
+    "http://10.0.1.172/createchannel.ajax?ChannelName=Test%20Channel"
+]
+HttpTest1 = HttpTest.HttpGetTest()
+BenchmarksOfNginx = HttpTest1.StartTest("http://10.0.1.172:81/login.html",{"Cookie": "token=59bd84465b4f6da0d9b2762c1de9123d4dee6ec7"},100,100)
+print("Nginx Benchmarks:")
+print(BenchmarksOfNginx)
+print("Node.js Tests:")
+for i in LinkArr:
+    Benchmarks = HttpTest1.StartTest(i,{"Cookie": "token=59bd84465b4f6da0d9b2762c1de9123d4dee6ec7"},100,100)
+    print(Benchmarks)
+
+exit()
+
+
+
+
+
+
+
 TestAmount = 1000
 WSArray = [0] * TestAmount
 LastMessage = ""
@@ -44,9 +73,5 @@ for i in range(TestAmount):
 while True:
     time.sleep(1000)
 
-# HTTP test snippet
-Test1 = HttpTest.HttpGetTest()
-BenchmarksOfNginx = Test1.StartTest("http://10.0.1.172/createchannel.ajax?ChannelName=TestChannel",{"Cookie": "token=1e4edb13b0c8470c66746fcfc23a5b41ed2b5f66"},100,100)
-print(BenchmarksOfNginx)
-#TestResult = Test1.StartTest("http://127.0.0.1/login.html",200,200)
+
 
