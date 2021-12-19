@@ -6,6 +6,7 @@
     "nodejs-websocket": "^1.7.2"
   },
   "scripts":{
+	  "test": "node test.js",
 	  "start": "node main.js"
   }
 }
