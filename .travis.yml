@@ -2,5 +2,5 @@ language: node_js
 node_js:
 - node
 install:
- - npm install mongodb
+ - npm install -g mongodb
  - npm install nodejs-websocket
