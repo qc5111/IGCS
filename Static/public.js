@@ -2,7 +2,6 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-W0TVN9Y36W');
-console.log("GOOGLE OK")
 function AutoDisappearNotification(Content,NoticeClass){//'alert-danger'
     $('.alert').html(Content).addClass(NoticeClass).show().delay(2000).fadeOut();
 }
